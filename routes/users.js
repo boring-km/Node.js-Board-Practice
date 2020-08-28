@@ -14,15 +14,19 @@ router.get('/', (req, res) => {
 
 // New
 router.get('/new', (req, res) => {
-    res.render('users/new');
+    var user = req.flash('user')[0] || {};
+    var errors = req.flash('errors')[0] || {};
+    res.render('users/new', { user: user, errors: errors });
 });
 
 // create
 router.post('/', (req, res) => {
-    console.log('create post!')
     User.create(req.body, (err, user) => {
-        console.log(err);
-        if (err) return res.json(err);
+        if (err) {
+            req.flash('user', req.body);
+            req.flash('errors', parseError(err));
+            return res.json({ result: 'fail' })
+        }
         return res.json({ result: 'success' });
     });
 });
@@ -37,10 +41,15 @@ router.get('/:username', (req, res) => {
 
 // edit
 router.get('/:username/edit', (req, res) => {
-    User.findOne({ username: req.params.username }, (err, user) => {
-        if (err) return res.json(err);
-        res.render('users/edit', { user: user });
-    });
+    var user = req.flash('user')[0];
+    var errors = req.flash('errors')[0] || {};
+    if (!user) {
+        User.findOne({ username: req.params.username }, (err, user) => {
+            if (err) return res.json(err);
+            res.render('users/edit', { username: req.params.username, user: user, errors: errors });
+        });
+    }
+    res.render('users/edit', { username: req.params.username, user: user, errors: errors });
 });
 
 // update
@@ -59,12 +68,31 @@ router.put('/:username', (req, res, next) => {
 
             // save updated user
             user.save((err, user) => {
-                if (err) return res.json(err);
+                if (err) {
+                    req.flash('user', req.body);
+                    req.flash('errors', parseError(err));
+                    return res.redirect('/users/' + req.params.username + '/edit');
+                }
                 res.redirect('/users/' + user.username);
             });
         });
 });
-
+function parseError(errors) {
+    var parsed = {};
+    if (errors.name == 'ValidationError') {
+        for (var name in errors.errors) {
+            var validationError = errors.errors[name];
+            parsed[name] = { message: validationError.message };
+        }
+    }
+    else if (errors.code == '11000' && errors.errmsg.indexOf('username') > 0) {
+        parsed.username = { message: 'This username already exists!' };
+    }
+    else {
+        parsed.unhandled = JSON.stringify(errors);
+    }
+    return parsed;
+}
 // destroy
 router.delete('/:username', (req, res) => {
     User.deleteOne({ username: req.params.username }, (err) => {

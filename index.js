@@ -1,6 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
+var flash = require('connect-flash');
+var session = require('express-session');
 var app = express();
 
 // DB Setting
@@ -12,6 +14,9 @@ app.use(express.static(__dirname+'/public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(methodOverride('_method'));
+app.use(flash());
+// secret 값은 session을 hashing하는데 사용되는 값
+app.use(session({secret:'MySecret', resave:true, saveUninitialized:true}));
 
 // Routes
 app.use('/', require('./routes/home'));
