@@ -21,6 +21,7 @@ router.get('/new', (req, res) => {
 router.post('/', (req, res) => {
     console.log('create post!')
     User.create(req.body, (err, user) => {
+        console.log(err);
         if (err) return res.json(err);
         return res.json({ result: 'success' });
     });

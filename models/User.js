@@ -30,8 +30,8 @@ userSchema.virtual('newPassword')
 
 userSchema.path('password').validate(function (v) {
     var userModel = this;
-    create(userModel)
-    update(userModel)
+    create(userModel);
+    update(userModel);
 });
 
 // password validation
@@ -55,7 +55,7 @@ function update(user) {
         if (!user.currentPassword) {
             user.invalidate('currentPassword', 'Current Password is required!');
         }
-        else if (user.currentPassword != user.originalPassword) {
+        else if (!bcrypt.compareSync(user.currentPassword, user.originalPassword)) {
             user.invalidate('currentPassword', 'Current Password is invalid!');
         }
 
@@ -65,8 +65,8 @@ function update(user) {
         console.log('isNewUpdated');
     }
 }
-/*
-userSchema.pre('save', next => {
+
+userSchema.pre('save', function (next) {
     var user = this;
     if(!user.isModified('password')) {
         return next();
@@ -81,6 +81,6 @@ userSchema.pre('save', next => {
 userSchema.methods.authenticate = function (password) {
     var user = this;
     return bcrypt.compareSync(password, user.password);
-};*/
+};
 
 module.exports = mongoose.model('user', userSchema);
