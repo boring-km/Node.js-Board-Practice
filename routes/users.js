@@ -25,9 +25,9 @@ router.post('/', (req, res) => {
         if (err) {
             req.flash('user', req.body);
             req.flash('errors', parseError(err));
-            return res.json({ result: 'fail' })
+            return res.json({ code: 'fail' })
         }
-        return res.json({ result: 'success' });
+        return res.json({ code: 'success' });
     });
 });
 
