@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var flash = require('connect-flash');
 var session = require('express-session');
+var passport = require('./config/passport');
 var app = express();
 
 // DB Setting
@@ -17,6 +18,13 @@ app.use(methodOverride('_method'));
 app.use(flash());
 // secret 값은 session을 hashing하는데 사용되는 값
 app.use(session({secret:'MySecret', resave:true, saveUninitialized:true}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.isAuthenticated();
+  res.locals.currentUser = req.user;
+  next();
+});
 
 // Routes
 app.use('/', require('./routes/home'));
